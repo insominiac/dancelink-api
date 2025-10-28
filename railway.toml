@@ -1,0 +1,8 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+# Use the lightweight health endpoint that doesn't hit the DB
+healthcheckPath = "/api/health"
+restartPolicyType = "ON_FAILURE"
+sleepApplication = false

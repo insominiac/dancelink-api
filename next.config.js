@@ -7,7 +7,16 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    domains: ['localhost', 'images.unsplash.com', 'danncelink.vercel.app'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'vercel.app',
+      },
+    ],
   },
   experimental: {
     serverActions: {

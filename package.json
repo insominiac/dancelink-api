@@ -2,10 +2,13 @@
   "name": "dance-platform",
   "version": "2.0.0",
   "private": true,
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "start": "next start",
+    "start": "prisma migrate deploy && next start -p $PORT",
     "lint": "next lint",
     "postbuild": "echo 'Build completed successfully'",
     "generate-translations": "node scripts/generate-translations.js",
