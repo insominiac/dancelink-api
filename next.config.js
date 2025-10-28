@@ -12,7 +12,11 @@ const nextConfig = {
   experimental: {
     serverActions: {
       allowedOrigins: ['danncelink.vercel.app', 'localhost:3000']
-    }
+    },
+    outputFileTracingIncludes: {
+      '/api/**/*': ['./lib/**/*'],
+    },
+    
   },
   // Vercel-specific optimizations
   poweredByHeader: false,
