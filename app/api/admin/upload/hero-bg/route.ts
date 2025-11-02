@@ -1,62 +1,56 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { writeFile, mkdir } from 'fs/promises'
-import { existsSync } from 'fs'
-import path from 'path'
+import { put, del } from '@vercel/blob'
+
+export const runtime = 'edge'
+
+const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
+const maxSize = 5 * 1024 * 1024 // 5MB
 
 export async function POST(request: NextRequest) {
   try {
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      return NextResponse.json({
+        error: 'Blob storage token not configured. Set BLOB_READ_WRITE_TOKEN.'
+      }, { status: 500 })
+    }
+
     const formData = await request.formData()
-    const file = formData.get('file') as File
-    
+    const file = formData.get('file') as File | null
     if (!file) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
     }
 
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
     if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json({ 
-        error: 'Invalid file type. Only JPEG, PNG, WebP, and GIF images are allowed.' 
+      return NextResponse.json({
+        error: 'Invalid file type. Only JPEG, PNG, WebP, and GIF images are allowed.'
       }, { status: 400 })
     }
 
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024 // 5MB in bytes
     if (file.size > maxSize) {
-      return NextResponse.json({ 
-        error: 'File too large. Maximum size is 5MB.' 
+      return NextResponse.json({
+        error: 'File too large. Maximum size is 5MB.'
       }, { status: 400 })
     }
 
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'hero-backgrounds')
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true })
-    }
+    const ext = file.name.includes('.') ? file.name.split('.').pop() : 'png'
+    const key = `uploads/hero-backgrounds/hero-bg-${Date.now()}.${ext}`
 
-    // Generate unique filename
-    const fileExtension = path.extname(file.name)
-    const fileName = `hero-bg-${Date.now()}${fileExtension}`
-    const filePath = path.join(uploadsDir, fileName)
-
-    // Convert file to buffer and save
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    await writeFile(filePath, buffer)
-
-    // Return the public URL
-    const publicUrl = `/uploads/hero-backgrounds/${fileName}`
+    const { url } = await put(key, file.stream(), {
+      access: 'public',
+      contentType: file.type,
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+    })
 
     return NextResponse.json({
       success: true,
       message: 'Hero background image uploaded successfully',
-      url: publicUrl,
-      filename: fileName
+      url,
+      filename: key.split('/').pop(),
     })
   } catch (error) {
     console.error('Error uploading hero background:', error)
-    return NextResponse.json({ 
-      error: 'Failed to upload hero background image' 
+    return NextResponse.json({
+      error: 'Failed to upload hero background image'
     }, { status: 500 })
   }
 }
@@ -64,18 +58,13 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const filename = searchParams.get('filename')
-    
-    if (!filename) {
-      return NextResponse.json({ error: 'No filename provided' }, { status: 400 })
+    const url = searchParams.get('url')
+
+    if (!url) {
+      return NextResponse.json({ error: 'No url provided' }, { status: 400 })
     }
 
-    // Delete the file
-    const filePath = path.join(process.cwd(), 'public', 'uploads', 'hero-backgrounds', filename)
-    if (existsSync(filePath)) {
-      const fs = require('fs').promises
-      await fs.unlink(filePath)
-    }
+    await del(url, { token: process.env.BLOB_READ_WRITE_TOKEN })
 
     return NextResponse.json({
       success: true,
@@ -83,8 +72,8 @@ export async function DELETE(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error deleting hero background:', error)
-    return NextResponse.json({ 
-      error: 'Failed to delete hero background image' 
+    return NextResponse.json({
+      error: 'Failed to delete hero background image'
     }, { status: 500 })
   }
 }
