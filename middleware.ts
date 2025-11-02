@@ -6,10 +6,11 @@ const ALLOWED_ORIGINS = new Set([
 ])
 
 export function middleware(req: NextRequest) {
+  if (!req.nextUrl.pathname.startsWith('/api/')) return NextResponse.next()
+
   const origin = req.headers.get('origin') || ''
   const isAllowed = ALLOWED_ORIGINS.has(origin)
 
-  // Preflight
   if (req.method === 'OPTIONS') {
     const res = new NextResponse(null, { status: 204 })
     if (isAllowed) {
@@ -34,6 +35,4 @@ export function middleware(req: NextRequest) {
   return res
 }
 
-export const config = {
-  matcher: ['/api/:path*'],
-}
+export const config = { matcher: ['/api/:path*'] }
