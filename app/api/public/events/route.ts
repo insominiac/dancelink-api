@@ -8,6 +8,7 @@ const CORS_HEADERS: Record<string, string> = {
   'Access-Control-Allow-Methods': 'GET,HEAD,OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Access-Control-Allow-Credentials': 'true',
+  'x-cors-test': 'ok'
 }
 
 export async function OPTIONS(_: NextRequest) {
