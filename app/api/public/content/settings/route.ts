@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import db, { ensureDbConnection } from '@/app/lib/db'
 
 // Default site settings
@@ -21,6 +21,17 @@ const DEFAULT_SETTINGS = {
   }
 }
 
+const CORS_HEADERS: Record<string, string> = {
+  'Access-Control-Allow-Origin': 'https://dancelink-liart.vercel.app',
+  'Access-Control-Allow-Methods': 'GET,HEAD,OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Credentials': 'true',
+}
+
+export async function OPTIONS(_: NextRequest) {
+  return new NextResponse(null, { status: 204, headers: CORS_HEADERS })
+}
+
 export async function GET() {
   try {
     await ensureDbConnection()
@@ -38,15 +49,15 @@ export async function GET() {
         address: settings.address,
         socialMedia: settings.socialMedia || DEFAULT_SETTINGS.socialMedia,
         footer: settings.footer || DEFAULT_SETTINGS.footer
-      })
+      }, { headers: CORS_HEADERS })
     } else {
       // If no settings exist, return default settings
-      return NextResponse.json(DEFAULT_SETTINGS)
+      return NextResponse.json(DEFAULT_SETTINGS, { headers: CORS_HEADERS })
     }
   } catch (error) {
     console.error('Error fetching site settings:', error)
     // Return default settings if there's any error
-    return NextResponse.json(DEFAULT_SETTINGS)
+    return NextResponse.json(DEFAULT_SETTINGS, { headers: CORS_HEADERS })
   }
 }
 

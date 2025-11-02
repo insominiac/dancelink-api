@@ -1,8 +1,19 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import db from '../../../lib/db'
 
 // Enable ISR with 10 minute revalidation
 export const revalidate = 600 // 10 minutes
+
+const CORS_HEADERS: Record<string, string> = {
+  'Access-Control-Allow-Origin': 'https://dancelink-liart.vercel.app',
+  'Access-Control-Allow-Methods': 'GET,HEAD,OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Credentials': 'true',
+}
+
+export async function OPTIONS(_: NextRequest) {
+  return new NextResponse(null, { status: 204, headers: CORS_HEADERS })
+}
 
 export async function GET() {
   try {
@@ -171,7 +182,7 @@ export async function GET() {
       featuredInstructors,
       popularStyles,
       lastUpdated: new Date().toISOString()
-    })
+    }, { headers: CORS_HEADERS })
 
   } catch (error) {
     console.error('Error fetching featured content:', error)
@@ -188,6 +199,6 @@ export async function GET() {
       ],
       lastUpdated: new Date().toISOString(),
       fallback: true
-    })
+    }, { headers: CORS_HEADERS })
   }
 }

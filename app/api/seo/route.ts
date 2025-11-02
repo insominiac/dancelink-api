@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/app/lib/db'
 
+const CORS_HEADERS: Record<string, string> = {
+  'Access-Control-Allow-Origin': 'https://dancelink-liart.vercel.app',
+  'Access-Control-Allow-Methods': 'GET,HEAD,OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Credentials': 'true',
+}
+
 // GET SEO data for a specific path
+export async function OPTIONS(_: NextRequest) {
+  return new NextResponse(null, { status: 204, headers: CORS_HEADERS })
+}
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
@@ -10,7 +21,7 @@ export async function GET(request: NextRequest) {
     if (!path) {
       return NextResponse.json(
         { error: 'Path parameter is required' },
-        { status: 400 }
+        { status: 400, headers: CORS_HEADERS }
       )
     }
     
@@ -49,7 +60,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         seoData: null,
         hasCustomSeo: false
-      })
+      }, { headers: CORS_HEADERS })
     }
     
     // Parse JSON fields
@@ -79,13 +90,13 @@ export async function GET(request: NextRequest) {
         customMeta: customMetaParsed
       },
       hasCustomSeo: true
-    })
+    }, { headers: CORS_HEADERS })
     
   } catch (error) {
     console.error('Error fetching SEO data:', error)
     return NextResponse.json(
       { error: 'Failed to fetch SEO data' },
-      { status: 500 }
+      { status: 500, headers: CORS_HEADERS }
     )
   }
 }

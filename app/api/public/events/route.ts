@@ -3,6 +3,17 @@ import prisma, { ensureDbConnection } from '../../../lib/db'
 import { resolveLocale } from '@/app/lib/locale'
 import { translationService } from '@/lib/translation-service'
 
+const CORS_HEADERS: Record<string, string> = {
+  'Access-Control-Allow-Origin': 'https://dancelink-liart.vercel.app',
+  'Access-Control-Allow-Methods': 'GET,HEAD,OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Credentials': 'true',
+}
+
+export async function OPTIONS(_: NextRequest) {
+  return new NextResponse(null, { status: 204, headers: CORS_HEADERS })
+}
+
 export async function GET(request: NextRequest) {
   try {
     await ensureDbConnection()
@@ -122,12 +133,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ 
       events: eventsWithAttendeeCount,
       total: eventsWithAttendeeCount.length 
-    })
+    }, { headers: CORS_HEADERS })
   } catch (error) {
     console.error('Error fetching public events:', error)
     return NextResponse.json(
       { error: 'Failed to fetch events' },
-      { status: 500 }
+      { status: 500, headers: CORS_HEADERS }
     )
   }
 }
