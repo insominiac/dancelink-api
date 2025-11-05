@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import prisma, { ensureDbConnection } from '@/app/lib/db'
 
 // Default content for contact page
 const DEFAULT_CONTACT_CONTENT = {
@@ -86,8 +87,9 @@ const DEFAULT_CONTACT_CONTENT = {
 // GET - Fetch current contact page content
 export async function GET() {
   try {
-    // For now, always return default content to avoid filesystem issues on Vercel
-    return NextResponse.json({ content: DEFAULT_CONTACT_CONTENT })
+    await ensureDbConnection()
+    const rec = await prisma.contactPageContent.findUnique({ where: { id: 'contact' } })
+    return NextResponse.json({ content: rec || DEFAULT_CONTACT_CONTENT })
   } catch (error) {
     console.error('Error fetching contact content:', error)
     return NextResponse.json(
@@ -97,26 +99,31 @@ export async function GET() {
   }
 }
 
-// PUT - Update contact page content (currently read-only for Vercel)
+// PUT - Update contact page content
 export async function PUT(request: NextRequest) {
   try {
+    await ensureDbConnection()
     const body = await request.json()
-    const { content } = body
+    const content = body?.content ?? body
 
-    if (!content) {
-      return NextResponse.json(
-        { error: 'Content is required' },
-        { status: 400 }
-      )
-    }
-
-    // TODO: Store in database instead of filesystem
-    // For now, just return success but don't actually save
-    console.log('Content update requested (not persisted):', content)
+    const saved = await prisma.contactPageContent.upsert({
+      where: { id: 'contact' },
+      update: {
+        heroTitle: content.heroTitle ?? null,
+        heroSubtitle: content.heroSubtitle ?? null,
+        sections: content.sections ?? null,
+      },
+      create: {
+        id: 'contact',
+        heroTitle: content.heroTitle ?? null,
+        heroSubtitle: content.heroSubtitle ?? null,
+        sections: content.sections ?? null,
+      },
+    })
 
     return NextResponse.json({ 
-      message: 'Content update received (not persisted - filesystem not available on Vercel)',
-      content: DEFAULT_CONTACT_CONTENT
+      message: 'Content updated successfully',
+      updatedAt: saved.updatedAt
     })
   } catch (error) {
     console.error('Error updating contact content:', error)
@@ -130,8 +137,24 @@ export async function PUT(request: NextRequest) {
 // POST - Reset to default content
 export async function POST() {
   try {
+    const saved = await prisma.contactPageContent.upsert({
+      where: { id: 'contact' },
+      update: {
+        heroTitle: DEFAULT_CONTACT_CONTENT.heroTitle,
+        heroSubtitle: DEFAULT_CONTACT_CONTENT.heroSubtitle,
+        sections: DEFAULT_CONTACT_CONTENT,
+      },
+      create: {
+        id: 'contact',
+        heroTitle: DEFAULT_CONTACT_CONTENT.heroTitle,
+        heroSubtitle: DEFAULT_CONTACT_CONTENT.heroSubtitle,
+        sections: DEFAULT_CONTACT_CONTENT,
+      },
+    })
+
     return NextResponse.json({ 
       message: 'Content reset to defaults successfully',
+      updatedAt: saved.updatedAt,
       content: DEFAULT_CONTACT_CONTENT
     })
   } catch (error) {

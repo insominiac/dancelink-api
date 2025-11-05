@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/app/lib/db'
+import prisma, { ensureDbConnection } from '@/app/lib/db'
 
 // Content will be stored in database instead of filesystem for Vercel compatibility
 const CONTENT_KEY = 'about-page'
@@ -118,13 +118,12 @@ const DEFAULT_ABOUT_CONTENT = {
 
 export async function GET() {
   try {
-    // For now, always return default content to ensure API stability
-    // TODO: Implement proper database storage when ready
-    console.log('Returning default about content for Vercel compatibility')
+    await ensureDbConnection()
+    const rec = await prisma.aboutPageContent.findUnique({ where: { id: 'about' } })
+    if (rec) return NextResponse.json(rec)
     return NextResponse.json(DEFAULT_ABOUT_CONTENT)
   } catch (error) {
     console.error('Error fetching about content:', error)
-    // Even if there's an error, return default content
     return NextResponse.json(DEFAULT_ABOUT_CONTENT)
   }
 }
@@ -138,28 +137,61 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Save content to database using upsert
-    await prisma.siteSettings.upsert({
-      where: {
-        id: CONTENT_KEY
-      },
+// Save content to database using upsert
+    await ensureDbConnection()
+    const saved = await prisma.aboutPageContent.upsert({
+      where: { id: 'about' },
       update: {
-        socialMedia: content,
-        updatedAt: new Date()
+        heroTitle: content.heroTitle ?? null,
+        heroSubtitle: content.heroSubtitle ?? null,
+        heroBadgeText: content.heroBadgeText ?? null,
+        statsTitle: content.statsTitle ?? null,
+        statsDescription: content.statsDescription ?? null,
+        storyTitle: content.storyTitle ?? null,
+        storyDescription1: content.storyDescription1 ?? null,
+        storyDescription2: content.storyDescription2 ?? null,
+        whyChooseUsTitle: content.whyChooseUsTitle ?? null,
+        heroFeatures: content.heroFeatures ?? null,
+        stats: content.stats ?? null,
+        features: content.features ?? null,
+        newsletterTitle: content.newsletterTitle ?? null,
+        newsletterDescription: content.newsletterDescription ?? null,
+        newsletterBenefits: content.newsletterBenefits ?? null,
+        ctaTitle: content.ctaTitle ?? null,
+        ctaDescription: content.ctaDescription ?? null,
+        ctaBadgeText: content.ctaBadgeText ?? null,
+        ctaButtons: content.ctaButtons ?? null,
+        ctaFeatures: content.ctaFeatures ?? null,
       },
       create: {
-        id: CONTENT_KEY,
-        siteName: 'DanceLink',
-        siteDescription: 'Professional dance platform',
-        contactEmail: 'info@dancelink.com',
-        socialMedia: content
-      }
+        id: 'about',
+        heroTitle: content.heroTitle ?? '',
+        heroSubtitle: content.heroSubtitle ?? '',
+        heroBadgeText: content.heroBadgeText ?? null,
+        statsTitle: content.statsTitle ?? null,
+        statsDescription: content.statsDescription ?? null,
+        storyTitle: content.storyTitle ?? null,
+        storyDescription1: content.storyDescription1 ?? null,
+        storyDescription2: content.storyDescription2 ?? null,
+        whyChooseUsTitle: content.whyChooseUsTitle ?? null,
+        heroFeatures: content.heroFeatures ?? null,
+        stats: content.stats ?? null,
+        features: content.features ?? null,
+        newsletterTitle: content.newsletterTitle ?? null,
+        newsletterDescription: content.newsletterDescription ?? null,
+        newsletterBenefits: content.newsletterBenefits ?? null,
+        ctaTitle: content.ctaTitle ?? null,
+        ctaDescription: content.ctaDescription ?? null,
+        ctaBadgeText: content.ctaBadgeText ?? null,
+        ctaButtons: content.ctaButtons ?? null,
+        ctaFeatures: content.ctaFeatures ?? null,
+      },
     })
 
     return NextResponse.json({ 
       success: true, 
       message: 'About content updated successfully',
-      updatedAt: new Date().toISOString()
+      updatedAt: saved.updatedAt
     })
   } catch (error) {
     console.error('Error saving about content:', error)

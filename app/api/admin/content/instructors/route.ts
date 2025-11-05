@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import prisma, { ensureDbConnection } from '@/app/lib/db'
 
 // Default instructors content
 const DEFAULT_CONTENT = {
@@ -12,7 +13,9 @@ const DEFAULT_CONTENT = {
 
 export async function GET() {
   try {
-    return NextResponse.json(DEFAULT_CONTENT)
+    await ensureDbConnection()
+    const rec = await prisma.instructorsPageContent.findUnique({ where: { id: 'instructors' } })
+    return NextResponse.json(rec || DEFAULT_CONTENT)
   } catch (error) {
     console.error('Error fetching instructors content:', error)
     return NextResponse.json(DEFAULT_CONTENT)
@@ -21,15 +24,32 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
+    await ensureDbConnection()
     const content = await request.json()
-    
-    console.log('Instructors content update requested (not persisted):', content)
-
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Instructors content received (not persisted on Vercel)',
-      updatedAt: new Date().toISOString()
+    const saved = await prisma.instructorsPageContent.upsert({
+      where: { id: 'instructors' },
+      update: {
+        heroBadgeText: content.heroBadgeText ?? null,
+        heroTitle: content.heroTitle ?? null,
+        heroSubtitle: content.heroSubtitle ?? null,
+        statsSection: content.statsSection ?? null,
+        noInstructorsSection: content.noInstructorsSection ?? null,
+        errorSection: content.errorSection ?? null,
+        ctaSection: content.ctaSection ?? null,
+      },
+      create: {
+        id: 'instructors',
+        heroBadgeText: content.heroBadgeText ?? null,
+        heroTitle: content.heroTitle ?? null,
+        heroSubtitle: content.heroSubtitle ?? null,
+        statsSection: content.statsSection ?? null,
+        noInstructorsSection: content.noInstructorsSection ?? null,
+        errorSection: content.errorSection ?? null,
+        ctaSection: content.ctaSection ?? null,
+      },
     })
+
+    return NextResponse.json({ success: true, updatedAt: saved.updatedAt })
   } catch (error) {
     console.error('Error updating instructors content:', error)
     return NextResponse.json({ error: 'Failed to update instructors content' }, { status: 500 })

@@ -983,3 +983,95 @@ model SiteSettings {
 
   @@map("site_settings")
 }
+
+// Structured CMS tables
+model HomepageContent {
+  id                   String   @id @default(cuid())
+  heroTitle            String
+  heroSubtitle         String
+  heroButtonText       String?
+  heroBackgroundImage  String?
+  aboutTitle           String?
+  aboutDescription     String?
+  testimonialsEnabled  Boolean  @default(true)
+  newsletterEnabled    Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@map("homepage_content")
+}
+
+model AboutPageContent {
+  id                   String   @id @default(cuid())
+  heroTitle            String?
+  heroSubtitle         String?
+  heroBadgeText        String?
+  statsTitle           String?
+  statsDescription     String?
+  storyTitle           String?
+  storyDescription1    String?
+  storyDescription2    String?
+  whyChooseUsTitle     String?
+  heroFeatures         Json?
+  stats                Json?
+  features             Json?
+  newsletterTitle      String?
+  newsletterDescription String?
+  newsletterBenefits   Json?
+  ctaTitle             String?
+  ctaDescription       String?
+  ctaBadgeText         String?
+  ctaButtons           Json?
+  ctaFeatures          Json?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@map("about_page_content")
+}
+
+model EventsPageContent {
+  id                   String   @id @default(cuid())
+  heroBadgeText        String?
+  heroTitle            String?
+  heroSubtitle         String?
+  featuredTitle        String?
+  featuredDescription  String?
+  searchTitle          String?
+  searchDescription    String?
+  ctaBadgeText         String?
+  ctaTitle             String?
+  ctaDescription       String?
+  heroFeatures         Json?
+  ctaButtons           Json?
+  ctaFeatures          Json?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@map("events_page_content")
+}
+
+model InstructorsPageContent {
+  id                     String   @id @default(cuid())
+  heroBadgeText          String?
+  heroTitle              String?
+  heroSubtitle           String?
+  statsSection           Json?
+  noInstructorsSection   Json?
+  errorSection           Json?
+  ctaSection             Json?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@map("instructors_page_content")
+}
+
+model ContactPageContent {
+  id               String   @id @default(cuid())
+  heroTitle        String?
+  heroSubtitle     String?
+  sections         Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("contact_page_content")
+}
